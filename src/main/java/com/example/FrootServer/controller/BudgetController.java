@@ -14,13 +14,13 @@ import com.example.FrootServer.util.SecurityUtil;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,20 +30,16 @@ public class BudgetController {
     private final MemberRepository memberRepository;
 
 
-
     @PostMapping("/money")
-    public String money(@RequestBody MoneyDto moneyDto){
-        Money getmoney=moneyDto.toMoney();
-
-       System.out.println("값: "+SecurityUtil.getEmail());
-
-
+    public String postMoney(@RequestBody MoneyDto moneyDto) {
+        Money getmoney = moneyDto.toMoney(SecurityUtil.getCurrentMemberId());
+        System.out.println("값: " + SecurityUtil.getCurrentMemberId());
         moneyRepository.save(getmoney);
-
-
-
-
-
         return "good";
+    }
+    @GetMapping("/money")
+    public ResponseEntity<List<Money>> getMoney(){
+        System.out.println(moneyRepository.findMoneyByUserId(SecurityUtil.getCurrentMemberId()));
+        return ResponseEntity.ok(moneyRepository.findMoneyByUserId(SecurityUtil.getCurrentMemberId()));
     }
 }

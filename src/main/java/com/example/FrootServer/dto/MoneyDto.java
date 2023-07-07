@@ -25,14 +25,12 @@ public class MoneyDto {
 
 
 
-    public Money toMoney() {
+    public Money toMoney(Long userId) {
         return Money.builder()
                 .money(money)
                 .output(output)
                 .input(input)
+                .userId(userId)
                 .build();
     }
-
-
-
 }
