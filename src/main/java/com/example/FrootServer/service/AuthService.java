@@ -4,6 +4,7 @@ import com.example.FrootServer.dto.MemberRequestDto;
 import com.example.FrootServer.dto.MemberResponseDto;
 import com.example.FrootServer.dto.TokenDto;
 import com.example.FrootServer.dto.TokenRequestDto;
+import com.example.FrootServer.entity.Authority;
 import com.example.FrootServer.entity.Member;
 import com.example.FrootServer.entity.RefreshToken;
 import com.example.FrootServer.jwt.TokenProvider;
@@ -22,14 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;   //단방향 암호화
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public MemberResponseDto signup(MemberRequestDto memberRequestDto) {
         if (memberRepository.existsByEmail(memberRequestDto.getEmail())) {
-            throw new RuntimeException("이미 가입되어 있는 유저입니다");
+            RuntimeException e=new RuntimeException("이미 가입되어 있는 유저입니다");
+            throw e;
         }
 
         Member member = memberRequestDto.toMember(passwordEncoder);
@@ -62,6 +64,10 @@ public class AuthService {
 
     @Transactional
     public TokenDto reissue(TokenRequestDto tokenRequestDto) {
+
+        System.out.println("reissuetokenReqeustDto:"+tokenRequestDto);
+
+
         // 1. Refresh Token 검증
         if (!tokenProvider.validateToken(tokenRequestDto.getRefreshToken())) {
             throw new RuntimeException("Refresh Token 이 유효하지 않습니다.");
@@ -69,6 +75,8 @@ public class AuthService {
 
         // 2. Access Token 에서 Member ID 가져오기
         Authentication authentication = tokenProvider.getAuthentication(tokenRequestDto.getAccessToken());
+
+        System.out.println("authentication : "+authentication);
 
         // 3. 저장소에서 Member ID 를 기반으로 Refresh Token 값 가져옴
         RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())

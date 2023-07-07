@@ -1,6 +1,8 @@
 package com.example.FrootServer.jwt;
 
+import com.example.FrootServer.dto.MemberRequestDto;
 import com.example.FrootServer.dto.TokenDto;
+import com.example.FrootServer.entity.Member;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -26,12 +28,14 @@ public class TokenProvider {
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30;            // 30분
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 
-    private final Key key;
+    private final Key  key;
 
     public TokenProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+
     }
+
 
     public TokenDto generateTokenDto(Authentication authentication) {
         // 권한들 가져오기
@@ -40,6 +44,7 @@ public class TokenProvider {
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
+        System.out.println("now : "+now);
 
         // Access Token 생성
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
@@ -48,6 +53,7 @@ public class TokenProvider {
                 .claim(AUTHORITIES_KEY, authorities)        // payload "auth": "ROLE_USER"
                 .setExpiration(accessTokenExpiresIn)        // payload "exp": 1516239022 (예시)
                 .signWith(key, SignatureAlgorithm.HS512)    // header "alg": "HS512"
+
                 .compact();
 
         // Refresh Token 생성
@@ -56,6 +62,7 @@ public class TokenProvider {
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
+
         return TokenDto.builder()
                 .grantType(BEARER_TYPE)
                 .accessToken(accessToken)
@@ -63,6 +70,7 @@ public class TokenProvider {
                 .refreshToken(refreshToken)
                 .build();
     }
+
 
     public Authentication getAuthentication(String accessToken) {
         // 토큰 복호화
